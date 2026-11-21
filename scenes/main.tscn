@@ -1,0 +1,66 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/player_controller.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/touch_controls.gd" id="2_touch"]
+
+[sub_resource type="Environment" id="Environment_default"]
+background_mode = 1
+background_color = Color(0.105, 0.145, 0.2, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.72, 0.78, 0.88, 1)
+ambient_light_energy = 0.7
+tonemap_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="Material_floor"]
+albedo_color = Color(0.24, 0.29, 0.32, 1)
+roughness = 0.92
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+material = SubResource("Material_floor")
+size = Vector3(60, 0.5, 60)
+
+[sub_resource type="BoxShape3D" id="BoxShape_floor"]
+size = Vector3(60, 0.5, 60)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape_player"]
+radius = 0.35
+height = 1.8
+
+[node name="Main" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_default")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-52, -28, 0)
+light_energy = 1.15
+shadow_enabled = true
+
+[node name="Floor" type="StaticBody3D" parent="."]
+position = Vector3(0, -0.25, 0)
+
+[node name="FloorMesh" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("BoxMesh_floor")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("BoxShape_floor")
+
+[node name="Player" type="CharacterBody3D" parent="."]
+position = Vector3(0, 0.02, 8)
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+position = Vector3(0, 0.9, 0)
+shape = SubResource("CapsuleShape_player")
+
+[node name="Head" type="Node3D" parent="Player"]
+position = Vector3(0, 1.58, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Player/Head"]
+current = true
+fov = 85.0
+near = 0.05
+
+[node name="TouchControls" type="CanvasLayer" parent="."]
+script = ExtResource("2_touch")
+player_path = NodePath("../Player")
