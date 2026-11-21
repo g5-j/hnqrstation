@@ -1,0 +1,115 @@
+name: Import optimized asphalt PBR material
+
+on:
+  push:
+    paths:
+      - ".github/workflows/import-asphalt.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-material:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Download ambientCG 1K asphalt material
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/asphalt assets/materials/asphalt materials
+          curl -fL --retry 5 --retry-delay 3 \
+            "https://ambientcg.com/get?file=Asphalt006_1K-JPG.zip" \
+            -o /tmp/Asphalt006_1K-JPG.zip
+          unzip -q /tmp/Asphalt006_1K-JPG.zip -d /tmp/asphalt
+          find /tmp/asphalt -type f -maxdepth 3 -print
+
+      - name: Install material maps and configure Godot
+        shell: bash
+        run: |
+          set -euo pipefail
+          find_one() {
+            local suffix="$1"
+            local found
+            found="$(find /tmp/asphalt -type f -iname "*_${suffix}.jpg" -o -iname "*_${suffix}.jpeg" | head -n 1)"
+            if [ -z "$found" ]; then
+              echo "Missing ambientCG map: $suffix" >&2
+              exit 1
+            fi
+            printf '%s' "$found"
+          }
+          cp "$(find_one Color)" assets/materials/asphalt/asphalt_color.jpg
+          cp "$(find_one NormalGL)" assets/materials/asphalt/asphalt_normal.jpg
+          cp "$(find_one Roughness)" assets/materials/asphalt/asphalt_roughness.jpg
+
+          cat > materials/asphalt_road.tres <<'EOF'
+          [gd_resource type="StandardMaterial3D" load_steps=4 format=3]
+
+          [ext_resource type="Texture2D" path="res://assets/materials/asphalt/asphalt_color.jpg" id="1_color"]
+          [ext_resource type="Texture2D" path="res://assets/materials/asphalt/asphalt_normal.jpg" id="2_normal"]
+          [ext_resource type="Texture2D" path="res://assets/materials/asphalt/asphalt_roughness.jpg" id="3_roughness"]
+
+          [resource]
+          albedo_texture = ExtResource("1_color")
+          roughness = 1.0
+          roughness_texture = ExtResource("3_roughness")
+          normal_enabled = true
+          normal_scale = 0.45
+          normal_texture = ExtResource("2_normal")
+          texture_filter = 1
+          texture_repeat = 1
+          uv1_scale = Vector3(18, 18, 1)
+          EOF
+
+          python3 - <<'PY'
+          from pathlib import Path
+          scene = Path("scenes/main.tscn")
+          data = scene.read_text()
+          data = data.replace(
+              '[ext_resource type="Shader" path="res://shaders/ground_surface.gdshader" id="3_ground_shader"]',
+              '[ext_resource type="Material" path="res://materials/asphalt_road.tres" id="3_ground_material"]'
+          )
+          data = data.replace(
+              '[sub_resource type="ShaderMaterial" id="GroundMaterial"]\nshader = ExtResource("3_ground_shader")\n\n',
+              ''
+          )
+          data = data.replace('material = SubResource("GroundMaterial")',
+                              'material = ExtResource("3_ground_material")')
+          data = data.replace('[gd_scene load_steps=11 format=3]',
+                              '[gd_scene load_steps=10 format=3]')
+          if "ground_surface.gdshader" in data or "GroundMaterial" in data:
+              raise SystemExit("Scene still references the old procedural shader")
+          scene.write_text(data)
+
+          readme = Path("README.md")
+          text = readme.read_text()
+          text = text.replace(
+              "- Procedural asphalt-like ground shader using inexpensive noise; no texture maps required.",
+              "- Realistic ambientCG Asphalt 006 PBR road material (CC0): 1K color, OpenGL normal, and roughness maps. The material uses a tiling StandardMaterial3D with restrained normal strength for mobile rendering."
+          )
+          text = text.replace(
+              "The current ground shader is procedural and texture-free.",
+              "The ground uses a pre-made 1K PBR asphalt material. Its maps are kept at 1K and use JPEG storage to limit download and memory costs."
+          )
+          readme.write_text(text)
+          PY
+
+          rm -f shaders/ground_surface.gdshader
+          rmdir shaders 2>/dev/null || true
+
+      - name: Commit imported material
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No material changes to commit."
+            exit 0
+          fi
+          git commit -m "Replace procedural ground shader with optimized asphalt PBR"
+          git push
