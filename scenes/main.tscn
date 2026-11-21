@@ -1,65 +1,90 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/player_controller.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/touch_controls.gd" id="2_touch"]
+[ext_resource type="Shader" path="res://shaders/ground_surface.gdshader" id="3_ground_shader"]
 
 [sub_resource type="Environment" id="Environment_default"]
 background_mode = 1
-background_color = Color(0.105, 0.145, 0.2, 1)
+background_color = Color(0.12, 0.16, 0.2, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.72, 0.78, 0.88, 1)
-ambient_light_energy = 0.7
+ambient_light_energy = 0.68
 tonemap_mode = 2
+glow_enabled = false
+volumetric_fog_enabled = false
 
-[sub_resource type="StandardMaterial3D" id="Material_floor"]
-albedo_color = Color(0.24, 0.29, 0.32, 1)
-roughness = 0.92
+[sub_resource type="ShaderMaterial" id="GroundMaterial"]
+shader = ExtResource("3_ground_shader")
 
-[sub_resource type="BoxMesh" id="BoxMesh_floor"]
-material = SubResource("Material_floor")
-size = Vector3(60, 0.5, 60)
+[sub_resource type="BoxMesh" id="FloorMesh"]
+material = SubResource("GroundMaterial")
+size = Vector3(100, 0.2, 100)
 
-[sub_resource type="BoxShape3D" id="BoxShape_floor"]
-size = Vector3(60, 0.5, 60)
+[sub_resource type="BoxShape3D" id="FloorShape"]
+size = Vector3(100, 0.2, 100)
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape_player"]
-radius = 0.35
+[sub_resource type="CapsuleShape3D" id="PlayerShape"]
+radius = 0.32
 height = 1.8
+
+[sub_resource type="CapsuleMesh" id="PlayerMesh"]
+radius = 0.32
+height = 1.8
+radial_segments = 12
+rings = 6
+
+[sub_resource type="StandardMaterial3D" id="PlayerMaterial"]
+albedo_color = Color(0.12, 0.42, 0.62, 1)
+roughness = 0.82
 
 [node name="Main" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_default")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-rotation_degrees = Vector3(-52, -28, 0)
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-48, -32, 0)
 light_energy = 1.15
 shadow_enabled = true
+shadow_bias = 0.04
+directional_shadow_max_distance = 60.0
 
 [node name="Floor" type="StaticBody3D" parent="."]
-position = Vector3(0, -0.25, 0)
+position = Vector3(0, -0.1, 0)
 
 [node name="FloorMesh" type="MeshInstance3D" parent="Floor"]
-mesh = SubResource("BoxMesh_floor")
+mesh = SubResource("FloorMesh")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
-shape = SubResource("BoxShape_floor")
+shape = SubResource("FloorShape")
 
 [node name="Player" type="CharacterBody3D" parent="."]
-position = Vector3(0, 0.02, 8)
+position = Vector3(0, 0.0, 8)
+collision_layer = 2
+collision_mask = 1
+floor_snap_length = 0.25
 script = ExtResource("1_player")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
 position = Vector3(0, 0.9, 0)
-shape = SubResource("CapsuleShape_player")
+shape = SubResource("PlayerShape")
+
+[node name="CapsuleVisual" type="MeshInstance3D" parent="Player"]
+position = Vector3(0, 0.9, 0)
+layers = 2
+mesh = SubResource("PlayerMesh")
+surface_material_override/0 = SubResource("PlayerMaterial")
 
 [node name="Head" type="Node3D" parent="Player"]
-position = Vector3(0, 1.58, 0)
+position = Vector3(0, 1.62, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Player/Head"]
 current = true
-fov = 85.0
+cull_mask = 1
+fov = 80.0
 near = 0.05
+far = 250.0
 
 [node name="TouchControls" type="CanvasLayer" parent="."]
 script = ExtResource("2_touch")

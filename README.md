@@ -1,15 +1,16 @@
 # Hnqrstation
 
-A Godot 4.7 mobile-first 3D prototype.
+A mobile-first 3D open-world roleplay prototype built with Godot 4.7.
 
-## Current test scene
+## Current prototype foundation
 
-The project opens directly into a first-person test area containing:
-- A large solid floor with collision.
-- A CharacterBody3D player with capsule collision.
-- A first-person camera with mouse look.
-- Keyboard movement (WASD), sprint (Shift), jump (Space), and mouse capture (click to capture, Escape to release).
-- Android touch controls: left virtual joystick, right-side swipe camera look, and a jump button.
+- World scale uses metres: 1 Godot unit = 1 metre.
+- 100 m × 100 m test ground with matching collision.
+- Procedural asphalt-like ground shader using inexpensive noise; no texture maps required.
+- Mobile renderer, restrained environment lighting, and one directional shadow-casting light.
+- Player collision and visual reference are both capsule-shaped: 1.8 m tall and 0.64 m wide.
+- First-person camera at 1.62 m eye height; the player's capsule is excluded from the first-person camera render mask.
+- Walk speed: 4.5 m/s; sprint: 7 m/s; jump velocity: 4.2 m/s.
 
 ## Controls
 
@@ -27,3 +28,7 @@ The project opens directly into a first-person test area containing:
 - JUMP button: Jump
 
 The mobile controls are created only when Godot reports a touchscreen device.
+
+## Performance approach
+
+The current ground shader is procedural and texture-free. The scene avoids expensive global illumination, volumetric fog, glow, and screen-space effects. It uses the Mobile renderer and a single directional light with bounded shadow distance. Visual quality and frame rate still need to be profiled on target Android devices.

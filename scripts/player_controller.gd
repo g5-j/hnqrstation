@@ -1,16 +1,17 @@
 extends CharacterBody3D
-## Basic first-person controller for keyboard/mouse and Android touch controls.
+## First-person controller. World distances and speeds are measured in metres and m/s.
 
-@export_category("Movement")
-@export var walk_speed: float = 5.0
-@export var sprint_speed: float = 8.0
-@export var jump_velocity: float = 4.5
-@export var ground_acceleration: float = 22.0
-@export var air_acceleration: float = 7.0
+@export_category("Movement (metres per second)")
+@export var walk_speed: float = 4.5
+@export var sprint_speed: float = 7.0
+@export var jump_velocity: float = 4.2
+@export var ground_acceleration: float = 18.0
+@export var air_acceleration: float = 5.0
 
-@export_category("Look")
-@export_range(0.0005, 0.01, 0.0001) var mouse_sensitivity: float = 0.0025
-@export_range(60.0, 100.0, 1.0) var camera_fov: float = 85.0
+@export_category("Camera")
+@export_range(0.0005, 0.01, 0.0001) var mouse_sensitivity: float = 0.0022
+@export_range(60.0, 100.0, 1.0) var camera_fov: float = 80.0
+@export_range(1.4, 1.8, 0.01) var eye_height: float = 1.62
 
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
@@ -23,6 +24,8 @@ var _jump_requested: bool = false
 
 func _ready() -> void:
 	camera.fov = camera_fov
+	head.position.y = eye_height
+	floor_snap_length = 0.25
 	if not DisplayServer.is_touchscreen_available():
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
