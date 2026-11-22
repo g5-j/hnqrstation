@@ -38,10 +38,10 @@ func _gui_input(event: InputEvent) -> void:
 		_update_value(event.position)
 
 
-func _update_value(position: Vector2) -> void:
+func _update_value(touch_position: Vector2) -> void:
 	var center := size * 0.5
 	var radius := minf(size.x, size.y) * 0.39
-	var offset := position - center
+	var offset := touch_position - center
 	_value = offset.limit_length(radius) / radius
 	value_changed.emit(_value)
 	queue_redraw()
