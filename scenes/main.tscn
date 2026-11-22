@@ -15,7 +15,6 @@ glow_enabled = false
 volumetric_fog_enabled = false
 
 [sub_resource type="BoxMesh" id="FloorMesh"]
-material = ExtResource("3_ground_material")
 size = Vector3(100, 0.2, 100)
 
 [sub_resource type="BoxShape3D" id="FloorShape"]
@@ -52,6 +51,7 @@ position = Vector3(0, -0.1, 0)
 
 [node name="FloorMesh" type="MeshInstance3D" parent="Floor"]
 mesh = SubResource("FloorMesh")
+material_override = ExtResource("3_ground_material")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
 shape = SubResource("FloorShape")
