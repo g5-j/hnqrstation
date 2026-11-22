@@ -24,23 +24,30 @@ func _draw() -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventScreenTouch:
-		if event.pressed and _finger_index == -1:
-			_finger_index = event.index
-			_update_value(event.position)
-		elif not event.pressed and event.index == _finger_index:
+	var local_event := make_input_local(event)
+
+	if local_event is InputEventScreenTouch:
+		var touch := local_event as InputEventScreenTouch
+		if touch.pressed and _finger_index == -1:
+			_finger_index = touch.index
+			_update_value(touch.position)
+		elif not touch.pressed and touch.index == _finger_index:
 			_finger_index = -1
 			_value = Vector2.ZERO
 			value_changed.emit(_value)
 			queue_redraw()
 
-	elif event is InputEventScreenDrag and event.index == _finger_index:
-		_update_value(event.position)
+	elif local_event is InputEventScreenDrag:
+		var drag := local_event as InputEventScreenDrag
+		if drag.index == _finger_index:
+			_update_value(drag.position)
 
 
 func _update_value(touch_position: Vector2) -> void:
 	var center := size * 0.5
 	var radius := minf(size.x, size.y) * 0.39
+	if radius <= 0.0:
+		return
 	var offset := touch_position - center
 	_value = offset.limit_length(radius) / radius
 	value_changed.emit(_value)
