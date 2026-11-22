@@ -1,8 +1,8 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/player_controller.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/touch_controls.gd" id="2_touch"]
-[ext_resource type="Shader" path="res://shaders/ground_surface.gdshader" id="3_ground_shader"]
+[ext_resource type="Material" path="res://materials/asphalt_ground.tres" id="3_ground_material"]
 
 [sub_resource type="Environment" id="Environment_default"]
 background_mode = 1
@@ -14,11 +14,8 @@ tonemap_mode = 2
 glow_enabled = false
 volumetric_fog_enabled = false
 
-[sub_resource type="ShaderMaterial" id="GroundMaterial"]
-shader = ExtResource("3_ground_shader")
-
 [sub_resource type="BoxMesh" id="FloorMesh"]
-material = SubResource("GroundMaterial")
+material = ExtResource("3_ground_material")
 size = Vector3(100, 0.2, 100)
 
 [sub_resource type="BoxShape3D" id="FloorShape"]
