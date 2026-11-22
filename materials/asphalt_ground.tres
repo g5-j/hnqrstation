@@ -6,7 +6,7 @@
 [resource]
 shader = ExtResource("1_shader")
 shader_parameter/texture_albedo = ExtResource("2_albedo")
-shader_parameter/albedo = Color(0.9, 0.9, 0.9, 1)
+shader_parameter/albedo = Color(0.52, 0.52, 0.52, 1)
 shader_parameter/uv_terrain_scale = Vector2(32, 32)
 shader_parameter/uv_terrain_offset = Vector2(0, 0)
 shader_parameter/roughness = 0.94
