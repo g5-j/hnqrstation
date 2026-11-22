@@ -4,17 +4,11 @@
 [ext_resource type="Texture2D" path="res://textures/asphalt_ground.png" id="2_albedo"]
 
 [resource]
-render_priority = 0
 shader = ExtResource("1_shader")
-shader_parameter/tile_margin = 0.12
-shader_parameter/uv_terrain_scale = Vector2(100, 100)
-shader_parameter/uv_terrain_offset = Vector2(0, 0)
-shader_parameter/albedo = Color(0.9, 0.9, 0.9, 1)
 shader_parameter/texture_albedo = ExtResource("2_albedo")
-shader_parameter/metallic = 0.0
-shader_parameter/metallic_texture_channel = Color(1, 0, 0, 0)
+shader_parameter/albedo = Color(0.9, 0.9, 0.9, 1)
+shader_parameter/uv_terrain_scale = Vector2(32, 32)
+shader_parameter/uv_terrain_offset = Vector2(0, 0)
 shader_parameter/roughness = 0.94
+shader_parameter/metallic = 0.0
 shader_parameter/specular = 0.12
-shader_parameter/normal_scale = 0.0
-shader_parameter/deep_parallax = false
-shader_parameter/heightmap_scale = 0.0
