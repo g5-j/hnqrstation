@@ -1,9 +1,9 @@
-name: Godot Project Validation
+name: Godot Mobile + GoyGI Validation
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -15,48 +15,55 @@ concurrency:
 
 jobs:
   validate:
-    name: Validate project with Godot 4.7
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    env:
+      GODOT_VERSION: "4.7.2"
+      GODOT_SILENCE_ROOT_WARNING: "1"
+      VK_ICD_FILENAMES: /usr/share/vulkan/icd.d/lvp_icd.x86_64.json
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Download Godot 4.7
+      - name: Install Vulkan software driver and display dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends wget unzip xvfb libvulkan1 mesa-vulkan-drivers vulkan-tools libx11-6 libxcursor1 libxinerama1 libxrandr2 libxi6 libxext6 libasound2 libpulse0 libfontconfig1 libgl1
+
+      - name: Download Godot
+        run: |
+          set -euo pipefail
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -O /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          sudo install -m 0755 "/tmp/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+          godot --version
+
+      - name: Import project and compile GoyGI compute shaders with Vulkan
         shell: bash
         run: |
           set -euo pipefail
-          GODOT_DIR="$RUNNER_TEMP/godot"
-          mkdir -p "$GODOT_DIR"
-          curl -fL --retry 3 --retry-delay 2 \
-            "https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip" \
-            -o "$RUNNER_TEMP/godot.zip"
-          unzip -q "$RUNNER_TEMP/godot.zip" -d "$GODOT_DIR"
-          chmod +x "$GODOT_DIR/Godot_v4.7-stable_linux.x86_64"
-          echo "GODOT=$GODOT_DIR/Godot_v4.7-stable_linux.x86_64" >> "$GITHUB_ENV"
-          "$GODOT_DIR/Godot_v4.7-stable_linux.x86_64" --version
+          rm -rf .godot
+          rm -f addons/goygi/shaders/*.glsl.import
+          timeout 420 xvfb-run -a -s "-screen 0 1280x720x24" godot --path . --editor --quit-after 3000 --rendering-driver vulkan --audio-driver Dummy --verbose 2>&1 | tee import.log
+          for shader in gi_volume gi_direct gi_blend gi_meter; do
+            test -n "$(find .godot/imported -maxdepth 1 -name "${shader}.glsl-*.res" -print -quit)"
+          done
+          if grep -nE "SCRIPT ERROR|Parse Error|Compile Error|COMPILATION ERROR|Error importing" import.log; then
+            exit 1
+          fi
 
-      - name: Import resources and validate scripts
+      - name: Run project smoke test
         shell: bash
         run: |
-          set -uo pipefail
-          "$GODOT" --headless --editor --path "$GITHUB_WORKSPACE" --quit 2>&1 | tee "$RUNNER_TEMP/godot-import.log"
-          test "${PIPESTATUS[0]}" -eq 0
-
-      - name: Run main scene smoke test
-        shell: bash
-        run: |
-          set -uo pipefail
-          "$GODOT" --headless --path "$GITHUB_WORKSPACE" --script res://tests/smoke_test.gd 2>&1 | tee "$RUNNER_TEMP/godot-smoke-test.log"
-          test "${PIPESTATUS[0]}" -eq 0
+          set -o pipefail
+          godot --headless --path . --script res://tests/smoke_test.gd 2>&1 | tee smoke-test.log
 
       - name: Upload diagnostic logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: godot-validation-logs
+          name: godot-goygi-validation-logs
           path: |
-            ${{ runner.temp }}/godot-import.log
-            ${{ runner.temp }}/godot-smoke-test.log
+            import.log
+            smoke-test.log
           if-no-files-found: warn
-          retention-days: 7
+          retention-days: 14
