@@ -5,10 +5,15 @@
 
 [resource]
 shader = ExtResource("1_shader")
-shader_parameter/texture_albedo = ExtResource("2_albedo")
-shader_parameter/albedo = Color(0.52, 0.52, 0.52, 1)
-shader_parameter/uv_terrain_scale = Vector2(32, 32)
+shader_parameter/tile_margin = 0.1
+shader_parameter/uv_terrain_scale = Vector2(18, 18)
 shader_parameter/uv_terrain_offset = Vector2(0, 0)
-shader_parameter/roughness = 0.94
+shader_parameter/albedo = Color(0.34, 0.35, 0.36, 1)
+shader_parameter/texture_albedo = ExtResource("2_albedo")
 shader_parameter/metallic = 0.0
-shader_parameter/specular = 0.12
+shader_parameter/metallic_texture_channel = Color(0, 0, 0, 0)
+shader_parameter/roughness = 0.92
+shader_parameter/specular = 0.18
+shader_parameter/normal_scale = 0.0
+shader_parameter/heightmap_scale = 0.0
+shader_parameter/deep_parallax = false
